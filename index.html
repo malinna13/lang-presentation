@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>reveal.js</title>
+
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/black.css" />
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section
+          data-background-color="aquamarine"
+          data-background-image="assets/bottom-left.png"
+          data-background-size="50% auto"
+          data-background-position="0px calc(100% - 0px)"
+        >
+          Особенности технической реализации проекта и его репозиторий
+        </section>
+        <section
+          data-background-color="darkblue"
+          data-background-image="assets/top-right.png"
+          data-background-size="50% auto"
+          data-background-position="right top"
+        >
+          <p>React + Typescript</p>
+
+          <img src="assets/react-typescript.png" height="500px" />
+        </section>
+
+        <section
+          data-background-color="#616536"
+          data-background-image="assets/bottom-left.png"
+          data-background-size="50% auto"
+          data-background-position="0px calc(100% - 0px)"
+        >
+          <p>Eslint + Prettier</p>
+
+          <div class="r-stack">
+            <img src="assets/eslint.png" class="fragment fade-in-then-out" />
+            <img src="assets/prettier.png" class="fragment fade-in-then-out" />
+          </div>
+        </section>
+
+        <section
+          data-background-color="#31B96E"
+          data-background-image="assets/top-right.png"
+          data-background-size="50% auto"
+          data-background-position="right top"
+        >
+          <p>React Router</p>
+          <div class="r-stack">
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 16px"
+            ><code data-line-numbers="2,6-9,15"><script style="display: block;" type="text/template">
+			import { Link } from 'react-router-dom';
+
+			const Navigation: React.FC<co> = ({ isAuth, callback }) => {
+				return (
+				    <Link to="/">Главная</Link>
+					<Link to="/textbook">Учебник</Link>
+					<Link to="/games">Игры</Link>
+					<Link to="/statistics">Статистика</Link>
+					{isAuth ? (
+						<a onClick={callback} style={{ cursor: 'pointer' }}>
+						  Выйти
+						</a>
+					  ) : (
+						<Link to="/login">Войти</Link>
+					  )}
+				);
+			  }; </script></code></pre>
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 13px"
+            ><code data-line-numbers="4-23"><script style="display: block;" type="text/template">
+				const DefaultRoutes = () => {
+					return (
+					  <Routes>
+						<Route path={RoutePaths.Entry} element={<Entry />} />
+						<Route path={RoutePaths.Login} element={<Login />} />
+						<Route path={RoutePaths.Register} element={<Registration />} />
+						<Route path={RoutePaths.Games}>
+						  <Route index element={<Games />} />
+						  <Route path={RoutePaths.SprintGame} element={<SprintGame />} />
+						  <Route path={RoutePaths.AudioCallGame} element={<AudioCallGame />} />
+						  <Route path={RoutePaths.SavannahGame} element={<SavannahGame />} />
+						</Route>
+						<Route
+						  path={RoutePaths.Statistics}
+						  element={
+							<ProtectedRoute>
+							  <Statistics />
+							</ProtectedRoute>
+						  }
+						/>
+						<Route path={RoutePaths.Textbook} element={<Textbook />} />
+					  </Routes>
+					);
+				  }; </script></code></pre>
+
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 16px"
+            ><code data-line-numbers="2, 4-10"><script style="display: block;" type="text/template">
+				import { Link, useLocation } from 'react-router-dom';
+
+				const { state } = useLocation();
+
+  				useEffect(() => {
+    				if (state) {
+     					 const { group, page } = state as ShowcaseProps;
+
+     					 startGame(page, group);
+   					}
+ 				 }, []); </script></code></pre>
+          </div>
+        </section>
+
+        <section
+          data-background-color="aquamarine"
+          data-background-image="assets/bottom-left.png"
+          data-background-size="50% auto"
+          data-background-position="0px calc(100% - 0px)"
+        >
+          <p>Axios</p>
+          <div class="r-stack">
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 16px"
+            ><code data-line-numbers="2,7,12"><script style="display: block;" type="text/template">
+				import axios from 'axios';
+
+				
+				//sign in
+				export const signIn = (body: SignInBody) => {
+				  return axios.post<SignInDTO>(`${API_URL}/signin`, body);
+				};
+				
+				//words
+				export const getWords = (group?: number, page?: number) => {
+				  return axios.get<Array<WordDTO>>(`${API_URL}/words`, {
+					params: {
+					  group,
+					  page,
+					},
+				  });
+				};</script></code></pre>
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 13px"
+            ><code data-line-numbers="2,12"><script style="display: block;" type="text/template">
+				  axios.interceptors.request.use(
+					(request) => {
+					const auth = storage.getItem<SignInDTO>('auth');
+					if (auth?.token && request.headers) {
+					  request.headers['Authorization'] = 'Bearer ' + auth.token;
+					}
+				  
+					return request;
+				  });
+				  
+				  axios.interceptors.response.use(
+					(response) => {
+					  return response;
+					},
+					async (error) => {
+					  if (error.response.status == 401) {
+						storage.clear();
+						// refresh the page for them
+						location.reload();
+						return Promise.reject({ message: 'Please re-authenticate.' });
+					  }
+					  return Promise.reject(error);
+					}
+				  ); </script></code></pre>
+          </div>
+        </section>
+
+        <section
+          data-background-color="darkblue"
+          data-background-image="assets/top-right.png"
+          data-background-size="50% auto"
+          data-background-position="right top"
+        >
+          <p>Context API</p>
+          <div class="r-stack">
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 16px"
+            ><code data-line-numbers="2,7,12"><script style="display: block;" type="text/template">
+				import { createContext, useContext } from 'react';
+
+				export const contextFactory = () => {
+				  const context = createContext;
+				
+				  const useAuthContext = () => {
+					const ctx = useContext(context);
+							
+					return ctx;
+				  };
+				
+				  return [useAuthContext, context];
+				};</script></code></pre>
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 13px"
+            ><code data-line-numbers="2-6"><script style="display: block;" type="text/template">
+				const [useAuthContext, AuthContext] = contextFactory<{
+					auth: SignInDTO | null;
+					setAuth: React.Dispatch<React.SetStateAction<SignInDTO | null>>;
+				  }>();
+				  export { useAuthContext };
+				  
+				  export default function AuthContextProvider({ children }: PropsWithChildren) {
+					const [auth, setAuth] = useState(storage.getItem<SignInDTO>('auth'));
+				  
+					const values = {
+					  auth,
+					  setAuth,
+					};
+				  
+					useEffect(() => {
+					  storage.setItem('auth', auth);
+					}, [JSON.stringify(auth)]);
+				  
+					return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
+				  }</script></code></pre>
+          </div>
+        </section>
+
+        <section
+          data-background-color="#616536"
+          data-background-image="assets/bottom-left.png"
+          data-background-size="50% auto"
+          data-background-position="0px calc(100% - 0px)"
+        >
+          <p>Material UI</p>
+          <div class="r-stack">
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 13px"
+            ><code data-line-numbers="2-6,8-18"><script style="display: block;" type="text/template">
+				import MuiAppBar from '@mui/material/AppBar';
+				import { Typography, styled, Drawer, IconButton, Link as LinkOuter } from '@mui/material';
+				
+				import MenuIcon from '@mui/icons-material/Menu';
+				import CloseIcon from '@mui/icons-material/Close';
+			
+				<Typography variant="h6" component="div">
+					<LinkOuter href="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
+					  RSLang
+					</LinkOuter>
+				  </Typography>
+				  <IconButton
+					sx={{ display: ['flex', 'none'], color: 'black' }}
+					onClick={handleDrawerToggle}
+				  >
+					{isMobileOpen ? <CloseIcon /> : <MenuIcon />}
+				  </IconButton>
+			</script></code></pre>
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 13px"
+            ><code data-line-numbers="2-22,24"><script style="display: block;" type="text/template">
+				<Drawer
+				variant="temporary"
+				open={isMobileOpen}
+				onClose={handleDrawerToggle}
+				anchor="top"
+				ModalProps={{
+				  keepMounted: true,
+				}}
+				sx={{
+				  display: ['flex', 'none'],
+				  position: 'relative',
+				  zIndex: '10',
+				  '& .MuiDrawer-paper': { width: '100%', height: '100vh' },
+				  '& .css-1nvnyqx-MuiPaper-root-MuiDrawer-paper': {
+					boxShadow: 'none !important',
+				  },
+				  '& * .css-uc62by-MuiList-root': {
+					display: 'flex',
+				  },
+				}}
+			  >
+				<Navigation isAuth={isAuth} callback={handleLogout} />
+			  </Drawer></script></code></pre>
+          </div>
+        </section>
+
+        <section
+          data-background-color="#31B96E"
+          data-background-image="assets/top-right.png"
+          data-background-size="50% auto"
+          data-background-position="right top"
+        >
+          <p>Styled-components</p>
+          <div class="r-stack">
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 13px"
+            ><code data-line-numbers="2,4,22"><script style="display: block;" type="text/template">
+					import styled from 'styled-components/macro';
+	
+					export const Wrapper = styled.div`
+						background-color: #0d3848;
+						background-image: url(${bgbottom}), url(${bgleft}), url(${bgright});
+						background-repeat: no-repeat, no-repeat, no-repeat;
+						background-size: 100%, auto, auto;
+						background-position: bottom, 0 0, 100% 0;
+						box-sizing: border-box;
+						height: 100%;
+						min-height: 100vh;
+						position: relative;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						font-family: Open Sans, sans-serif;
+						color: #fff;
+						font-size: 16px;
+					`;
+	
+					export const Content = styled.div`
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+					`;
+				  </script></code></pre>
+          </div>
+        </section>
+        <section
+          data-background-color="aquamarine"
+          data-background-image="assets/bottom-left.png"
+          data-background-size="50% auto"
+          data-background-position="0px calc(100% - 0px)"
+        >
+          <p>Chart.js</p>
+          <div class="r-stack">
+            <pre
+              class="fragment fade-in-then-out"
+              style="font-size: 13px"
+            ><code data-line-numbers="2-6,9-11,29"><script style="display: block;" type="text/template">
+				import { Chart, registerables } from 'chart.js';
+				Chart.register(...registerables);
+
+				const chartRef = useRef<HTMLCanvasElement>(null);
+				const chartTotalRef = useRef<HTMLCanvasElement>(null);
+		
+				if (chartTotalRef) {
+					const ctx = chartTotalRef.current?.getContext('2d') as CanvasRenderingContext2D;
+					const labels = Object.keys(counter);
+					const data = {
+			 		 labels: labels,
+			  		datasets: [
+						{
+				 		 label: 'Изучено слов',
+				 		 data: Object.values(counter).map(
+								(elem, i, arr) =>
+					  				elem.right + elem.wrong + arr.slice(0, i)
+									.reduce((prev, curr) => prev + curr.right + curr.wrong, 0)
+						  ),
+						 borderColor: blue[300],
+						backgroundColor: '#64b5f655',
+				 		fill: true,
+				 		lineTension: 0.25,
+						},
+			 		 ],
+				};
+	
+			const chart = new Chart(ctx, {
+			  type: 'line',
+			  data: data,
+			  options: {
+				responsive: true,
+				plugins: {
+				  legend: {
+					position: 'top',
+				  },
+				  title: {
+					display: false,
+					text: 'Chart.js Line Chart',
+				  },
+				},
+			  },
+			});
+		  }
+			  </script></code></pre>
+          </div>
+        </section>
+
+        <section
+          data-background-color="darkblue"
+          data-background-image="assets/top-right.png"
+          data-background-size="50% auto"
+          data-background-position="right top"
+        >
+          <p>История коммитов</p>
+          <a
+            href="https://github.com/vyach-g/rs-lang/commits/develop?after=b079a182933e1f721ce35826f1f0a11550d9b5f2+139&branch=develop&qualified_name=refs%2Fheads%2Fdevelop"
+          >
+            → репозиторий →</a
+          >
+          <img src="assets/commits.png" height="500px" />
+        </section>
+        <section
+          data-background-color="#616536"
+          data-background-image="assets/bottom-left.png"
+          data-background-size="50% auto"
+          data-background-position="0px calc(100% - 0px)"
+        >
+          <p>Примеры PR</p>
+          <a
+            href="https://github.com/vyach-g/rs-lang/pulls?q=is%3Apr+is%3Aclosed"
+          >
+            → репозиторий →</a
+          >
+          <div class="r-stack">
+            <img
+              class="fragment fade-in-then-out"
+              src="assets/comments.png"
+              height="500px"
+            />
+            <img
+              class="fragment fade-in-then-out"
+              src="assets/pr.png"
+              height="500px"
+            />
+
+            <img
+              class="fragment fade-in-then-out"
+              src="assets/approve.png"
+              height="300px"
+            />
+          </div>
+        </section>
+        <section
+          data-background-color="#31B96E"
+          data-background-image="assets/top-right.png"
+          data-background-size="50% auto"
+          data-background-position="right top"
+        >
+          <p>Технические сложности и проблемы</p>
+
+          <div class="r-stack">
+            <img
+              class="fragment fade-in-then-out"
+              src="assets/dialog1.png"
+              height="500px"
+            />
+            <img
+              class="fragment fade-in-then-out"
+              src="assets/dialog2.png"
+              height="500px"
+            />
+
+            <img
+              class="fragment fade-in-then-out"
+              src="assets/dialog3.png"
+              height="500px"
+            />
+          </div>
+        </section>
+        <section
+          data-background-color="aquamarine"
+          data-background-image="assets/bottom-left.png"
+          data-background-size="50% auto"
+          data-background-position="0px calc(100% - 0px)"
+        >
+          Спасибо за внимание!
+        </section>
+      </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      });
+    </script>
+  </body>
+</html>
